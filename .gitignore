@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Virtualenv
+.venv/
+venv/
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+*.log
+run.log
+
+# Local databases / snapshots / backups
+*.db
+*.sqlite
+*.sqlite3
+
+# Data exports
+*.csv
+
+# Local env files (secrets)
+.env
+

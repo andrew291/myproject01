@@ -1,33 +1,27 @@
+from utils.env import load_dotenv
+load_dotenv()
 import asyncio
-from datetime import datetime
-
+from storage.db import init_db
 from data_feed.binance_ws import start_ws
-from data_feed.market_state import market_state
-from config import SYMBOLS
-
-
-async def printer():
-    while True:
-        await asyncio.sleep(5)
-
-        print("\n--- MARKET SNAPSHOT ---")
-        for symbol in SYMBOLS:
-            state = market_state.get(symbol)
-            if not state or state.price is None:
-                continue
-
-            print(
-                f"{symbol} | price={state.price} | "
-                f"points={len(state.price_history)} | "
-                f"last={state.last_update}"
-            )
+from signals.signal_engine import SignalEngine
+from trades.trade_simulator import trade_simulator_loop
+from trades.signal_consumer import SignalConsumer
 
 
 async def main():
-    ws_task = asyncio.create_task(start_ws())
-    printer_task = asyncio.create_task(printer())
+    print("Initializing database...")
+    init_db()
+    print("Database initialized.")
 
-    await asyncio.gather(ws_task, printer_task)
+    engine = SignalEngine()
+    consumer = SignalConsumer()
+
+    await asyncio.gather(
+        start_ws(),
+        engine.run_forever(),
+        consumer.run_forever(),
+        trade_simulator_loop(),
+    )
 
 
 if __name__ == "__main__":

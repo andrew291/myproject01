@@ -19,7 +19,6 @@ async def binance_ws_listener():
             message = await websocket.recv()
             data = json.loads(message)
 
-            # data is a list of tickers
             for ticker in data:
                 symbol = ticker.get("s")
                 if symbol not in SYMBOLS:
