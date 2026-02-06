@@ -5,14 +5,12 @@ from config import DATABASE_URL
 from storage.models import Base
 
 
-# Create SQLAlchemy engine
 engine = create_engine(
     DATABASE_URL,
     future=True,
 )
 
 
-# Create session factory
 SessionLocal = sessionmaker(
     bind=engine,
     autocommit=False,

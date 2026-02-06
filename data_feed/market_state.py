@@ -3,7 +3,6 @@ from typing import Dict
 from datetime import datetime
 
 
-# How many seconds of price history we keep
 PRICE_HISTORY_SECONDS = 120
 
 
@@ -12,11 +11,9 @@ class MarketSymbolState:
         self.price: float | None = None
         self.last_update: datetime | None = None
 
-        # deque of (timestamp, price)
         self.price_history = deque(maxlen=PRICE_HISTORY_SECONDS)
 
 
-# Global market state
 market_state: Dict[str, MarketSymbolState] = {}
 
 

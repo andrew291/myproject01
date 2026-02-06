@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from storage.db import SessionLocal
 from storage.models import Signal, Trade
@@ -25,6 +26,45 @@ def get_signal_by_id(signal_id: int) -> Optional[Signal]:
     session: Session = SessionLocal()
     try:
         return session.query(Signal).filter(Signal.id == signal_id).first()
+    finally:
+        session.close()
+
+
+def get_signals_without_trade(
+    since_time: datetime,
+    limit: int = 100,
+) -> List[Signal]:
+    """
+    Return signals newer than since_time that do NOT yet have a trade row.
+    This is used by SignalConsumer to create exactly one trade per signal.
+    """
+    session: Session = SessionLocal()
+    try:
+        # subquery of already-used signal_ids
+        used_signal_ids_sel = select(Trade.signal_id)
+
+
+        rows = (
+            session.query(Signal)
+            .filter(Signal.timestamp_signal >= since_time)
+            .filter(~Signal.id.in_(used_signal_ids_sel))
+            .order_by(Signal.id.asc())
+            .limit(limit)
+            .all()
+        )
+        return rows
+    finally:
+        session.close()
+
+
+def trade_exists_for_signal(signal_id: int) -> bool:
+    """
+    Safety check to prevent duplicate trades for a signal.
+    Useful across restarts and protects against race conditions.
+    """
+    session: Session = SessionLocal()
+    try:
+        return session.query(Trade).filter(Trade.signal_id == signal_id).first() is not None
     finally:
         session.close()
 
