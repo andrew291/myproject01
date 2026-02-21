@@ -4,7 +4,6 @@ A modular, end‑to‑end **crypto market signal → trade simulation system** b
 
 This project connects to **Binance Futures WebSocket**, detects momentum‑based trading signals, converts them into simulated trades, tracks performance, and optionally sends **Telegram notifications**.
 
-It is designed as a **clean, extensible baseline** for experimenting with different trading logics, filters, and analytics — *not* as a black‑box trading bot.
 
 ---
 
