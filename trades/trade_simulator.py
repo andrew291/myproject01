@@ -1,7 +1,11 @@
 import asyncio
 from datetime import datetime
 
-from config import TAKE_PROFIT_PCT, STOP_LOSS_PCT, TIME_STOP_SECONDS
+from config import (
+    TIME_STOP_SECONDS,
+    TRAILING_ACTIVATION_PCT,
+    TRAILING_DISTANCE_PCT,
+)
 from storage.queries import (
     get_pending_trades,
     get_open_trades,
@@ -11,8 +15,12 @@ from storage.queries import (
 from data_feed.market_state import market_state
 
 
+# In-memory trailing state
+TRAIL_STATE = {}  # trade_id -> dict
+
+
 async def trade_simulator_loop():
-    print("Trade simulator started.")
+    print("Trade simulator started (TRAILING MODE).")
 
     while True:
         now = datetime.utcnow()
@@ -29,27 +37,26 @@ async def trade_simulator_loop():
 
             entry_price = state.price
 
-            if trade.direction == "LONG":
-                tp_price = entry_price * (1 + TAKE_PROFIT_PCT)
-                sl_price = entry_price * (1 - STOP_LOSS_PCT)
-            else:
-                tp_price = entry_price * (1 - TAKE_PROFIT_PCT)
-                sl_price = entry_price * (1 + STOP_LOSS_PCT)
-
             mark_trade_open(
                 trade_id=trade.id,
                 entry_time=now,
                 entry_price=entry_price,
-                tp_price=tp_price,
-                sl_price=sl_price,
+                tp_price=None,
+                sl_price=None,
             )
+
+            # init trailing state
+            TRAIL_STATE[trade.id] = {
+                "armed": False,
+                "peak_price": entry_price,
+            }
 
             print(
                 f"TRADE OPEN | id={trade.id} | {trade.symbol} | {trade.direction} | "
-                f"entry={entry_price:.6f} | tp={tp_price:.6f} | sl={sl_price:.6f}"
+                f"entry={entry_price:.6f}"
             )
 
-        # -------- EXIT TRADES --------
+        # -------- MANAGE / EXIT TRADES --------
         open_trades = get_open_trades()
         for trade in open_trades:
             state = market_state.get(trade.symbol)
@@ -59,19 +66,47 @@ async def trade_simulator_loop():
             price = state.price
             hold_seconds = int((now - trade.entry_time).total_seconds())
 
+            trail = TRAIL_STATE.get(trade.id)
+            if trail is None:
+                continue
+
+            # --- Update peak price ---
+            if trade.direction == "LONG":
+                if price > trail["peak_price"]:
+                    trail["peak_price"] = price
+            else:
+                if price < trail["peak_price"]:
+                    trail["peak_price"] = price
+
+            # --- Arm trailing stop ---
+            if not trail["armed"]:
+                pnl = (
+                    (price - trade.entry_price) / trade.entry_price
+                    if trade.direction == "LONG"
+                    else (trade.entry_price - price) / trade.entry_price
+                )
+
+                if pnl >= TRAILING_ACTIVATION_PCT:
+                    trail["armed"] = True
+                    print(
+                        f"TRAIL ARMED | trade_id={trade.id} | "
+                        f"pnl={pnl*100:.2f}%"
+                    )
+
             exit_reason = None
 
-            if trade.direction == "LONG":
-                if price >= trade.tp_price:
-                    exit_reason = "TP"
-                elif price <= trade.sl_price:
-                    exit_reason = "SL"
-            else:
-                if price <= trade.tp_price:
-                    exit_reason = "TP"
-                elif price >= trade.sl_price:
-                    exit_reason = "SL"
+            # --- Trailing stop logic ---
+            if trail["armed"]:
+                if trade.direction == "LONG":
+                    trail_sl = trail["peak_price"] * (1 - TRAILING_DISTANCE_PCT)
+                    if price <= trail_sl:
+                        exit_reason = "TRAIL"
+                else:
+                    trail_sl = trail["peak_price"] * (1 + TRAILING_DISTANCE_PCT)
+                    if price >= trail_sl:
+                        exit_reason = "TRAIL"
 
+            # --- Time stop ---
             if exit_reason is None and hold_seconds >= TIME_STOP_SECONDS:
                 exit_reason = "TIME"
 
@@ -96,10 +131,11 @@ async def trade_simulator_loop():
                     hold_seconds=hold_seconds,
                 )
 
+                TRAIL_STATE.pop(trade.id, None)
+
                 print(
                     f"TRADE CLOSED | id={trade.id} | reason={exit_reason} | "
-                    f"pnl_1x={pnl_1x*100:.2f}% | pnl_5x={pnl_5x*100:.2f}% | "
-                    f"hold={hold_seconds}s"
+                    f"pnl_1x={pnl_1x*100:.2f}% | hold={hold_seconds}s"
                 )
 
         await asyncio.sleep(1)

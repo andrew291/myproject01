@@ -40,9 +40,7 @@ def get_signals_without_trade(
     """
     session: Session = SessionLocal()
     try:
-        # subquery of already-used signal_ids
         used_signal_ids_sel = select(Trade.signal_id)
-
 
         rows = (
             session.query(Signal)
@@ -111,7 +109,7 @@ def mark_trade_open(
     trade_id: int,
     entry_time: datetime,
     entry_price: float,
-    tp_price: float,
+    tp_price: Optional[float],
     sl_price: float,
 ):
     session: Session = SessionLocal()
@@ -122,9 +120,24 @@ def mark_trade_open(
 
         trade.entry_time = entry_time
         trade.entry_price = entry_price
-        trade.tp_price = tp_price
+        trade.tp_price = tp_price  # can be None in NO-TP mode
         trade.sl_price = sl_price
 
+        session.commit()
+    finally:
+        session.close()
+
+
+def update_trade_sl(trade_id: int, new_sl_price: float):
+    """
+    Update SL while trade is open (breakeven / trailing).
+    """
+    session: Session = SessionLocal()
+    try:
+        trade = session.query(Trade).filter(Trade.id == trade_id).first()
+        if trade is None:
+            return
+        trade.sl_price = new_sl_price
         session.commit()
     finally:
         session.close()

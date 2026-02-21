@@ -31,3 +31,19 @@ run.log
 # Local env files (secrets)
 .env
 
+# Runtime folders
+runtime/
+
+# Backups
+*_backup*.db
+*_snapshot*.db
+
+# Python cache (recursive)
+**/__pycache__/
+
+# Windows junk
+Thumbs.db
+
+# Local data folders
+exports/
+old_data/
