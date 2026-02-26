@@ -1,35 +1,40 @@
-# 🚀 Crypto Momentum Signal & Trade Simulator
+🚀 Crypto Momentum Signal & Trade Simulator
 
-A modular, end-to-end **crypto market signal → trade simulation system** built in Python.
+A modular, end-to-end crypto market signal → trade simulation system built in Python.
 
-This project connects to **Binance Futures WebSocket**, detects momentum-based trading signals, converts them into simulated trades, tracks performance, and optionally sends **Telegram notifications**.
+This project connects to Binance Futures WebSocket, detects momentum-based trading signals, converts them into simulated trades, tracks performance, and optionally sends Telegram notifications.
 
----
+✅ Requirements
 
-## ✅ Requirements
+Python 3.10+ (required — project uses modern type hints like float | None)
 
-- **Python 3.10+** (required — the project uses modern type hints like `float | None`)
-- Internet access (for Binance WebSocket)
-- Optional: Telegram bot credentials (for notifications)
+Internet connection (for Binance WebSocket)
 
----
+Optional: Telegram bot credentials
 
-## ✨ Key Features
+✨ Key Features
 
-* 📡 Real-time Binance Futures WebSocket feed
-* 📊 Momentum-based signal engine (configurable)
-* 🔁 Signal → Trade pipeline (exactly one trade per signal)
-* 🧪 Trade simulator (TP / SL / time-based exits)
-* 🗃️ SQLite storage (signals + trades)
-* 📬 Telegram notifications for trade suggestions
-* 🧩 Pluggable strategy logic (easy to extend)
-* 🧠 Analytics-ready data model
+📡 Real-time Binance Futures WebSocket feed
 
----
+📊 Momentum-based signal engine (configurable)
+
+🔁 Signal → Trade pipeline (exactly one trade per signal)
+
+🧪 Trade simulator (TP / SL / time-based exits)
+
+🗃️ SQLite storage (signals + trades)
+
+📬 Telegram notifications for trade suggestions
+
+🧩 Pluggable strategy logic (easy to extend)
+
+🧠 Analytics-ready data model
+
+--- 
 
 ## 🧠 Architecture Overview
 
-```mermaid
+mermaid
 flowchart TD
     WS[Binance WebSocket] --> MS[Market State]
     MS --> SE[Signal Engine]
@@ -39,6 +44,9 @@ flowchart TD
     TC --> TS[Trade Simulator]
     TS --> DB
     SE -->|notify| TG[Telegram]
+
+---
+
 📁 Project Structure
 myproject01/
 ├── analytics/           # notebooks & analysis (future)
@@ -84,7 +92,7 @@ The system can notify you when a trade is suggested.
 
 Setup
 
-Create a local .env file (do not edit .env.example):
+Create a local .env file:
 
 cp .env.example .env
 
@@ -95,84 +103,88 @@ TELEGRAM_NOTIFY_SIGNALS=true
 TELEGRAM_BOT_TOKEN=PASTE_TOKEN_HERE
 TELEGRAM_CHAT_ID=PASTE_CHAT_ID_HERE
 
-Start the bot in Telegram (open the bot chat and press Start).
-
-Signals will be sent automatically if enabled.
+Open your bot in Telegram and press Start.
 
 ⚠️ Never commit real tokens — .env is ignored by git.
 
 ▶️ Running Locally
+
+Requires Python 3.10+
+
 🪟 Windows (PowerShell)
-1) Install Python (one-time)
+1️⃣ Install Python (one-time)
 
-Download Python 3.10+ for Windows from https://python.org
+Download Python 3.10+ from:
+https://www.python.org/downloads/windows/
 
-During install, check ✅ Add Python to PATH.
+During installation:
+
+✅ Check “Add Python to PATH”
+
+✅ Ensure pip is installed
 
 Verify:
 
 python --version
 python -m pip --version
-2) Clone the repo
+2️⃣ Clone the repository
 git clone https://github.com/andrew291/myproject01.git
 cd myproject01
-3) Allow running scripts (first time only)
-
-If PowerShell blocks .ps1 scripts:
-
+3️⃣ Allow running local scripts (first time only)
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 Press Y to confirm.
 
-4) Setup (venv + dependencies + .env)
+4️⃣ Setup environment
 .\scripts\setup.ps1
-5) Run
+
+This will:
+
+Create .venv
+
+Install dependencies
+
+Prepare environment
+
+5️⃣ Run the application
 .\scripts\run.ps1
 
 Stop with Ctrl + C.
 
 🍎 macOS (Terminal)
-1) Check Python version
-
-macOS may ship with older Python (e.g. 3.9). You need Python 3.10+:
-
+1️⃣ Check Python version
 python3 --version
-2) Install Python 3.10+ (choose one)
 
-Option A (recommended): install from python.org
+If version is lower than 3.10, install Python 3.10+ from:
+
 https://www.python.org/downloads/macos/
 
-Option B (CLI / Homebrew):
+Restart Terminal after installation.
 
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-brew install python
-
-After install, verify:
+Verify again:
 
 python3 --version
-3) Clone + run
+2️⃣ Clone the repository
 git clone https://github.com/andrew291/myproject01.git
 cd myproject01
-
+3️⃣ Create virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
+4️⃣ Install dependencies
 pip install -r requirements.txt
 
-cp .env.example .env   # optional if you want Telegram
+(Optional but recommended)
+
+python -m pip install --upgrade pip
+5️⃣ Configure Telegram (optional)
+cp .env.example .env
+
+Edit .env with your credentials.
+
+6️⃣ Run the application
 python main.py
 
 Stop with Ctrl + C.
-
-🐧 Linux (optional)
-git clone https://github.com/andrew291/myproject01.git
-cd myproject01
-
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-cp .env.example .env   # optional if you want Telegram
-python main.py
 
 You should see:
 
@@ -263,4 +275,4 @@ modify strategy logic
 
 experiment freely
 
-Happy trading 🚀
+Happy hacking 🚀
