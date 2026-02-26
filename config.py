@@ -1,17 +1,6 @@
-# =========================
 # Database
-# =========================
 
 DATABASE_URL = "sqlite:///./momentum.db"
-
-
-# =========================
-# Symbols to monitor (Binance USDT Perpetual Futures)
-# Carefully selected mix:
-# - majors
-# - liquid alts
-# - volatile movers
-# =========================
 
 SYMBOLS = [
     # Majors

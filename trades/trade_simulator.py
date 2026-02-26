@@ -15,7 +15,7 @@ from storage.queries import (
 from data_feed.market_state import market_state
 
 
-# In-memory trailing state
+
 TRAIL_STATE = {}  # trade_id -> dict
 
 
@@ -45,7 +45,6 @@ async def trade_simulator_loop():
                 sl_price=None,
             )
 
-            # init trailing state
             TRAIL_STATE[trade.id] = {
                 "armed": False,
                 "peak_price": entry_price,
